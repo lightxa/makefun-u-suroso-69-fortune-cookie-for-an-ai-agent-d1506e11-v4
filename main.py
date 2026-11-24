@@ -56,15 +56,25 @@ import os
 
 
 def main():
-    """Validate the fortune and write it to /output/entry.txt."""
+    """Validate the fortune and write it to the entry file.
+
+    Writes to /output/entry.txt by default, or to
+    $MAKEFUN_OUTPUT_DIR/entry.txt when MAKEFUN_OUTPUT_DIR is set,
+    so the entry can be tested locally without /output. The fortune
+    text and its validation are identical either way.
+    """
     text = validate(FORTUNE)
-    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
-    with open(OUTPUT_PATH, "w", encoding="utf-8") as handle:
+    output_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "").strip()
+    output_path = (
+        os.path.join(output_dir, "entry.txt") if output_dir else OUTPUT_PATH
+    )
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as handle:
         handle.write(text)
     # Read back what actually landed on disk and re-validate it, so a
     # bad write can never pass silently: the gate judges the file, not
     # the string in memory.
-    with open(OUTPUT_PATH, "r", encoding="utf-8") as handle:
+    with open(output_path, "r", encoding="utf-8") as handle:
         written = handle.read()
     if written != text:
         raise ValueError("entry.txt on disk does not match the fortune")
